@@ -11,6 +11,8 @@ const ProductSchema = new mongoose.Schema(
     category: { type: String, required: true },
     image: { type: String, required: true },
     address: { type: Object, required: true },
+    addressLink: { type: Object },
+    phoneNumber: { type: String },
     hashTag: [String],
   },
   {
