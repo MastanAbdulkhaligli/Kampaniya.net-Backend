@@ -27,7 +27,6 @@ router.post("/add", verifyTokenAndAdmin, async (req, res) => {
 });
 
 // Update Product
-
 router.put("/:id", verifyTokenAndAdmin, async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -55,11 +54,16 @@ router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
 
 // Find Product
 router.get("/find/:id", async (req, res) => {
+  const productID = req.params.id;
   try {
-    const product = await Product.findById(req.params.id);
-    return res.status(200).json(product);
-  } catch (err) {
-    response.status(500).json(err);
+    if (productID) {
+      const product = await Product.findById(productID);
+      return res.status(200).json(product);
+    } else {
+      return res.status(200).json("axtardiginiz product movcud deyil");
+    }
+  } catch (error) {
+    return res.status(404).json("axtardiginiz product movcud deyil");
   }
 });
 
@@ -103,9 +107,15 @@ router.get("/pagination", async (req, res) => {
     const PAGE_SIZE = 8;
     const total = await Product.countDocuments({});
     const page = parseInt(req.query.page || "0");
+    //kampaniyaName: { $regex: search, $options: "i" },
     const posts = await Product.find({
-      kampaniyaName: { $regex: search, $options: "i" },
+      $or: [
+        { hashTag: { $regex: search } },
+        { kampaniyaName: { $regex: search, $options: "i" } },
+        { owner: { $regex: search, $options: "i" } },
+      ],
     })
+      .sort({ created_at: -1 })
       .limit(PAGE_SIZE)
       .skip(PAGE_SIZE * page);
     return res
@@ -113,6 +123,26 @@ router.get("/pagination", async (req, res) => {
       .json({ total, totalPages: Math.ceil(total / PAGE_SIZE), posts });
   } catch (err) {
     response.status(500).json(err);
+  }
+});
+
+// Find Product with Id and other product with same Owner
+router.get("/others/:id", async (req, res) => {
+  const productID = req.params.id;
+  try {
+    if (productID) {
+      const product = await Product.findById(productID);
+      const others = await Product.find({ owner: product.owner }).limit(8);
+
+      let cleanedOthers = others.filter(
+        (item) => item.kampaniyaName !== product.kampaniyaName
+      );
+      return res.status(200).json({ product, others: cleanedOthers });
+    } else {
+      return res.status(200).json("axtardiginiz product movcud deyil");
+    }
+  } catch (error) {
+    return res.status(404).json("axtardiginiz product movcud deyil");
   }
 });
 

@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const Header = require("../models/Header");
+const { verifyTokenAndAdmin } = require("./verifyToken");
 
 router.post("/add", async (req, res) => {
   const newHeader = new Header({
@@ -13,6 +14,21 @@ router.post("/add", async (req, res) => {
     res.status(201).json(savedHeader);
   } catch (err) {
     res.status(500).json(err);
+  }
+});
+
+router.put("/update/:id", verifyTokenAndAdmin, async (req, res) => {
+  try {
+    const oldHeader = await Header.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: req.body,
+      },
+      { new: true }
+    );
+    res.status(200).json(oldHeader);
+  } catch (error) {
+    res.status(500).json(error);
   }
 });
 

@@ -13,6 +13,7 @@ const ProductSchema = new mongoose.Schema(
     address: { type: Object, required: true },
     addressLink: { type: Object },
     phoneNumber: { type: String },
+    productStatus: { type: String },
     hashTag: [String],
   },
   {

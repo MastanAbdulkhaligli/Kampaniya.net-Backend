@@ -95,6 +95,30 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get spesific category with pagination
+
+router.get("/category", async (req, res) => {
+  const qCategory = req.query.category;
+  const search = req.query.search || "";
+
+  try {
+    const PAGE_SIZE = 8;
+    const total = await Product.countDocuments({});
+    const page = parseInt(req.query.page || "0");
+    const posts = await Product.find({
+      category: qCategory,
+    })
+      .sort({ created_at: -1 })
+      .limit(PAGE_SIZE)
+      .skip(PAGE_SIZE * page);
+    return res
+      .status(200)
+      .json({ total, totalPages: Math.ceil(total / PAGE_SIZE), posts });
+  } catch (error) {
+    response.status(500).json(err);
+  }
+});
+
 // Get All Product with  Pagination
 router.get("/pagination", async (req, res) => {
   try {
@@ -107,8 +131,13 @@ router.get("/pagination", async (req, res) => {
     const PAGE_SIZE = 8;
     const total = await Product.countDocuments({});
     const page = parseInt(req.query.page || "0");
+    //kampaniyaName: { $regex: search, $options: "i" },
     const posts = await Product.find({
-      kampaniyaName: { $regex: search, $options: "i" },
+      $or: [
+        { hashTag: { $regex: search } },
+        { kampaniyaName: { $regex: search, $options: "i" } },
+        { owner: { $regex: search, $options: "i" } },
+      ],
     })
       .sort({ created_at: -1 })
       .limit(PAGE_SIZE)
